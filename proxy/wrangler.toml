@@ -1,0 +1,23 @@
+name = "gemini-image-proxy"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# 開発環境
+[env.dev]
+name = "gemini-image-proxy-dev"
+
+# 本番環境
+[env.production]
+name = "gemini-image-proxy"
+
+# 環境変数（Secretsで設定）
+# wrangler secret put GEMINI_API_KEY  - Plan生成用（Gemini 2.5 Flash）
+# wrangler secret put KIE_API_KEY     - 画像生成用（kie.ai nano-banana-pro）
+# wrangler secret put AUTH_TOKENS     - 認証トークン（カンマ区切り）
+
+# KVストア（レート制限用）
+# wrangler kv:namespace create RATE_LIMIT
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"

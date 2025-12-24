@@ -1,0 +1,10 @@
+{
+  "id": "gemini-summary-images",
+  "name": "Gemini Summary Images",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Generate AI-powered summary images for your notes using Gemini. Automatically creates infographics, diagrams, and visual summaries.",
+  "author": "",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

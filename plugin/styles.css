@@ -1,0 +1,66 @@
+/* Gemini Summary Images Plugin Styles */
+
+/* 進捗モーダル */
+.gemini-summary-progress-modal {
+  padding: 20px;
+}
+
+.gemini-summary-progress-modal .progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background-color: var(--background-modifier-border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.gemini-summary-progress-modal .progress-bar {
+  height: 100%;
+  background-color: var(--interactive-accent);
+  transition: width 0.3s ease;
+}
+
+.gemini-summary-progress-modal .progress-message {
+  margin: 12px 0;
+  color: var(--text-normal);
+}
+
+.gemini-summary-progress-modal .progress-status {
+  font-size: 0.9em;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* フェーズ別スタイル */
+.gemini-summary-progress-modal.phase-done .progress-bar {
+  background-color: var(--color-green);
+}
+
+.gemini-summary-progress-modal.phase-error .progress-bar {
+  background-color: var(--color-red);
+}
+
+.gemini-summary-progress-modal.phase-error .progress-message {
+  color: var(--color-red);
+}
+
+/* AI画像ブロックのスタイル（プレビュー用） */
+.markdown-preview-view .ai-summary-image-block {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 16px 0;
+  background-color: var(--background-secondary);
+}
+
+.markdown-preview-view .ai-summary-image-block img {
+  max-width: 100%;
+  border-radius: 4px;
+}
+
+.markdown-preview-view .ai-summary-image-block em {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.9em;
+  color: var(--text-muted);
+}
