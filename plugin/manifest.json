@@ -1,0 +1,10 @@
+{
+  "id": "gemini-summary-images",
+  "name": "Gemini Summary Images",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "Summarize images in your notes using Google Gemini AI",
+  "author": "",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}
