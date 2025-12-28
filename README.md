@@ -38,7 +38,7 @@ Recommended setup for most users - no server required!
 
 ### 3. Configure the Plugin
 
-1. Open Obsidian Settings → Community Plugins → Gemini Summary Images → Settings
+1. Open Obsidian Settings → Community Plugins → Docs Summary to Image → Settings
 2. Keep **Connection Mode** as "Direct API (Recommended)"
 3. Enter your API keys:
    - **OpenAI API Key**: For plan generation (`sk-...`)

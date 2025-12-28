@@ -38,7 +38,7 @@ OpenAI GPTとkie.aiのnano-banana-proモデルを使用して、Obsidianドキ�
 
 ### 3. プラグインの設定
 
-1. Obsidian設定 → コミュニティプラグイン → Gemini Summary Images → 設定を開く
+1. Obsidian設定 → コミュニティプラグイン → Docs Summary to Image → 設定を開く
 2. **接続モード**を「Direct API（推奨）」のままにする
 3. APIキーを入力：
    - **OpenAI APIキー**: プラン生成用（`sk-...`）
