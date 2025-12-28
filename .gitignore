@@ -1,3 +1,7 @@
+# Internal docs (not for public)
+IMPLEMENTATION_PLAN.md
+docs/
+
 # Logs
 logs
 *.log
