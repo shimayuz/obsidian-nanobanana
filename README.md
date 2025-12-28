@@ -1,10 +1,10 @@
 # Obsidian NanoBanana Plugin
 
-An Obsidian plugin that automatically generates AI-powered summary images for your notes using OpenAI GPT and kie.ai's nano-banana-pro model.
+An Obsidian plugin that automatically generates AI-powered summary images for your Markdown documents using OpenAI GPT and kie.ai's nano-banana-pro model.
 
 ## Features
 
-- 🎨 Analyze note content and auto-generate up to 8 beautiful summary images
+- 🎨 Analyze Obsidian document content and auto-generate up to 8 beautiful summary images
 - 🤖 Intelligent plan generation powered by OpenAI GPT-5-mini (optimal image planning per heading)
 - 🖼️ High-quality image generation from kie.ai's nano-banana-pro model
 - 🔄 Two connection modes: Direct API (simple) or Proxy Server (advanced)
@@ -47,7 +47,7 @@ Recommended setup for most users - no server required!
 
 ### 4. Generate Images!
 
-1. Open any markdown note
+1. Open any Obsidian document (.md)
 2. Press `Cmd/Ctrl + P` and search for "Generate Summary Images"
 3. Watch the real-time progress in the modal
 4. Images will be automatically inserted after headings
@@ -56,9 +56,9 @@ Recommended setup for most users - no server required!
 
 | Command | Description |
 |---------|-------------|
-| Generate Summary Images | Generate summary images for current note |
+| Generate Summary Images | Generate summary images for current document |
 | Undo Last Image Injection | Undo the last image injection |
-| Remove All AI Images from Current Note | Remove all AI images from current note |
+| Remove All AI Images from Current Note | Remove all AI images from current document |
 | Show Last Backup | Show the latest backup |
 
 ## Advanced Setup (Proxy Server Mode)
@@ -123,7 +123,7 @@ For users who want to:
 | Setting | Description | Default |
 |---------|-------------|---------|
 | Attachment Folder | Where to save images | attachments/ai-summary |
-| Create Backup | Backup note before changes | ON |
+| Create Backup | Backup document before changes | ON |
 | Backup Location | Plugin data or Vault | Plugin data |
 
 ## Image Styles
@@ -136,10 +136,10 @@ For users who want to:
 
 ## Generation Flow
 
-1. **Plan Generation**: OpenAI GPT-5-mini analyzes the note and creates optimal image plans for each heading
+1. **Plan Generation**: OpenAI GPT-5-mini analyzes the document and creates optimal image plans for each heading
 2. **Image Generation**: kie.ai nano-banana-pro generates images based on each plan (async polling)
 3. **Save**: Generated images are saved to the specified folder
-4. **Inject**: Images are automatically inserted at appropriate positions in the note
+4. **Inject**: Images are automatically inserted at appropriate positions in the document
 
 ## Troubleshooting
 
@@ -159,13 +159,13 @@ For users who want to:
 - Verify the API key has correct permissions
 
 ### "Failed to generate image"
-- The prompt might be too complex - try with shorter notes
+- The prompt might be too complex - try with shorter documents
 - Check your internet connection
 - kie.ai might be experiencing high demand - try again later
 
 ### Images not generating
 - Check max image count setting
-- Verify note has headings (#, ##, ###)
+- Verify document has headings (#, ##, ###)
 - Check console logs for errors (Cmd/Ctrl + Shift + I)
 
 ## Development

@@ -1,10 +1,10 @@
 # Obsidian NanoBanana Plugin
 
-OpenAI GPTとkie.aiのnano-banana-proモデルを使用して、ノート用のAI要約画像を自動生成するObsidianプラグインです。
+OpenAI GPTとkie.aiのnano-banana-proモデルを使用して、Obsidianドキュメント用のAI要約画像を自動生成するプラグインです。
 
 ## 機能
 
-- 🎨 ノートの内容を分析し、最大8枚の美しい要約画像を自動生成
+- 🎨 Obsidianドキュメントの内容を分析し、最大8枚の美しい要約画像を自動生成
 - 🤖 OpenAI GPT-5-miniによるインテリジェントなプラン生成（見出しごとに最適な画像を計画）
 - 🖼️ kie.aiのnano-banana-proモデルによる高品質な画像生成
 - 🔄 2つの接続モード：Direct API（シンプル）とProxy Server（上級者向け）
@@ -47,18 +47,18 @@ OpenAI GPTとkie.aiのnano-banana-proモデルを使用して、ノート用のA
 
 ### 4. 画像を生成！
 
-1. 任意のマークダウンノートを開く
+1. 任意のObsidianドキュメント（.md）を開く
 2. `Cmd/Ctrl + P` を押し、「Generate Summary Images」を検索して実行
 3. 進捗モーダルで生成状況をリアルタイム確認
-4. 画像がノートの見出し直後に自動挿入されます
+4. 画像がドキュメントの見出し直後に自動挿入されます
 
 ## コマンド一覧
 
 | コマンド | 説明 |
 |---------|------|
-| Generate Summary Images | 現在のノートに要約画像を生成 |
+| Generate Summary Images | 現在のドキュメントに要約画像を生成 |
 | Undo Last Image Injection | 直前の画像埋め込みを取り消し |
-| Remove All AI Images from Current Note | 現在のノートから全AI画像を削除 |
+| Remove All AI Images from Current Note | 現在のドキュメントから全AI画像を削除 |
 | Show Last Backup | 最新のバックアップを表示 |
 
 ## 詳細設定（Proxyサーバーモード）
@@ -123,7 +123,7 @@ OpenAI GPTとkie.aiのnano-banana-proモデルを使用して、ノート用のA
 | 設定項目 | 説明 | デフォルト |
 |---------|------|---------|
 | 添付フォルダ | 画像の保存先 | attachments/ai-summary |
-| バックアップ作成 | 変更前にノートをバックアップ | ON |
+| バックアップ作成 | 変更前にドキュメントをバックアップ | ON |
 | バックアップ場所 | プラグインデータ or Vault | Plugin data |
 
 ## 画像スタイル
@@ -136,10 +136,10 @@ OpenAI GPTとkie.aiのnano-banana-proモデルを使用して、ノート用のA
 
 ## 生成フロー
 
-1. **プラン生成**: OpenAI GPT-5-miniがノートを分析し、各見出しに最適な画像プランを作成
+1. **プラン生成**: OpenAI GPT-5-miniがドキュメントを分析し、各見出しに最適な画像プランを作成
 2. **画像生成**: kie.ai nano-banana-proで各プランに基づいて画像を生成（非同期ポーリング）
 3. **保存**: 生成された画像を指定フォルダに保存
-4. **埋め込み**: 画像をノートの適切な位置に自動挿入
+4. **埋め込み**: 画像をドキュメントの適切な位置に自動挿入
 
 ## トラブルシューティング
 
@@ -159,13 +159,13 @@ OpenAI GPTとkie.aiのnano-banana-proモデルを使用して、ノート用のA
 - APIキーに正しい権限があるか確認
 
 ### 「Failed to generate image」
-- プロンプトが複雑すぎる可能性 - より短いノートで試す
+- プロンプトが複雑すぎる可能性 - より短いドキュメントで試す
 - インターネット接続を確認
 - kie.aiが高負荷状態かもしれません - 後でもう一度試す
 
 ### 画像が生成されない
 - 最大画像数の設定を確認
-- ノートに見出し（#, ##, ###）があるか確認
+- ドキュメントに見出し（#, ##, ###）があるか確認
 - コンソールログでエラーを確認（Cmd/Ctrl + Shift + I）
 
 ## 開発
