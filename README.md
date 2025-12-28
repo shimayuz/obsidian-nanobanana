@@ -1,56 +1,65 @@
-# Gemini Summary Images Plugin
+# Obsidian NanoBanana Plugin
 
-An Obsidian plugin that generates AI-powered summary images for your notes using Google's Gemini and kie.ai's nano-banana-pro model.
+An Obsidian plugin that automatically generates AI-powered summary images for your notes using OpenAI GPT and kie.ai's nano-banana-pro model.
 
 ## Features
 
-- 🎨 Generate 4-5 beautiful summary images per note
-- 🤖 Powered by Gemini 2.5 Flash for intelligent content analysis
-- 🖼️ High-quality images from kie.ai's nano-banana-pro model
+- 🎨 Analyze note content and auto-generate up to 8 beautiful summary images
+- 🤖 Intelligent plan generation powered by OpenAI GPT-5-mini (optimal image planning per heading)
+- 🖼️ High-quality image generation from kie.ai's nano-banana-pro model
 - 🔄 Two connection modes: Direct API (simple) or Proxy Server (advanced)
-- 💾 Automatic backup with undo support
-- 🎯 Smart positioning of images after relevant headings
-- 📊 Progress tracking during generation
+- 💾 Automatic backup with Undo support
+- 🎯 Smart positioning of images after headings
+- 📊 Real-time progress display (including polling status)
+- 🗑️ Bulk delete AI images command
 
 ## Quick Start (Direct API Mode)
 
-This is the recommended setup for most users - no server required!
+Recommended setup for most users - no server required!
 
 ### 1. Install the Plugin
 
-1. Download the latest release from the [Releases page](https://github.com/your-username/obsidian-gemini-plugin/releases)
-2. Extract to `YourVault/.obsidian/plugins/obsidian-gemini-plugin/`
+1. Download the latest release from the [Releases page](https://github.com/shimayuz/obsidian-nanobanana/releases)
+2. Extract to `YourVault/.obsidian/plugins/obsidian-nanobanana/`
 3. Enable the plugin in Obsidian's Community Plugins settings
 
 ### 2. Get API Keys
 
-#### Gemini API Key
-1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Click "Create API Key"
-3. Select an existing project or create a new one
-4. Copy the API key (starts with `AIzaSy...`)
+#### OpenAI API Key (for plan generation)
+1. Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Click "Create new secret key"
+3. Copy the API key (starts with `sk-...`)
 
-#### kie.ai API Key
+#### kie.ai API Key (for image generation)
 1. Visit [kie.ai](https://kie.ai) and sign up
 2. Navigate to your account settings or API section
 3. Generate a new API key
-4. Copy the API key (starts with `kie-...`)
+4. Copy the API key
 
 ### 3. Configure the Plugin
 
-1. Open Obsidian Settings → Community Plugins → Gemini Summary Images → Options
+1. Open Obsidian Settings → Community Plugins → Gemini Summary Images → Settings
 2. Keep **Connection Mode** as "Direct API (Recommended)"
 3. Enter your API keys:
-   - **Gemini API Key**: Paste your key from step 2
-   - **kie.ai API Key**: Paste your key from step 2
-4. Adjust other settings as desired (image style, count, etc.)
+   - **OpenAI API Key**: For plan generation (`sk-...`)
+   - **kie.ai API Key**: For image generation
+4. Adjust other settings as needed
 
 ### 4. Generate Images!
 
 1. Open any markdown note
-2. Press `Cmd/Ctrl + P` and search for "Generate summary images"
-3. Watch the progress modal as images are generated
-4. Images will be automatically inserted into your note
+2. Press `Cmd/Ctrl + P` and search for "Generate Summary Images"
+3. Watch the real-time progress in the modal
+4. Images will be automatically inserted after headings
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| Generate Summary Images | Generate summary images for current note |
+| Undo Last Image Injection | Undo the last image injection |
+| Remove All AI Images from Current Note | Remove all AI images from current note |
+| Show Last Backup | Show the latest backup |
 
 ## Advanced Setup (Proxy Server Mode)
 
@@ -59,97 +68,114 @@ For users who want to:
 - Add rate limiting and usage tracking
 - Keep API keys off local machines
 
-### Option 1: Use Cloudflare Workers (Recommended)
+### Using Cloudflare Workers
 
 1. Deploy the proxy server:
    ```bash
-   # Clone the repository
-   git clone https://github.com/your-username/obsidian-gemini-plugin.git
-   cd obsidian-gemini-plugin/proxy
+   git clone https://github.com/shimayuz/obsidian-nanobanana.git
+   cd obsidian-nanobanana/proxy
    
-   # Deploy to Cloudflare Workers
    npm install -g wrangler
    wrangler login
    wrangler deploy
    ```
 
 2. Set environment variables in Cloudflare dashboard:
-   - `GEMINI_API_KEY`: Your Gemini API key
+   - `OPENAI_API_KEY`: Your OpenAI API key
    - `KIE_API_KEY`: Your kie.ai API key
-   - `AUTH_TOKENS`: Create a token like `ogsip_user123_abc`
+   - `AUTH_TOKENS`: Auth token (e.g., `ogsip_user123_abc`)
 
 3. Configure plugin:
-   - Set **Connection Mode** to "Proxy Server (Advanced)"
-   - **Proxy URL**: Your Worker URL (e.g., `https://your-worker.workers.dev`)
+   - **Connection Mode**: "Proxy Server (Advanced)"
+   - **Proxy URL**: Your Worker URL
    - **Proxy Token**: The auth token you created
 
-### Option 2: Run Locally
-
-```bash
-cd obsidian-gemini-plugin/proxy
-npm install
-npm run dev
-```
-
-Then configure plugin with:
-- Proxy URL: `http://localhost:8787`
-- Proxy Token: Your configured token
-
 ## Settings
+
+### Connection Settings
 
 | Setting | Description | Default |
 |---------|-------------|---------|
 | Connection Mode | Direct API or Proxy Server | Direct API |
-| Image Count | Number of images to generate | 4 |
+| OpenAI API Key | For plan generation (Direct API mode) | - |
+| kie.ai API Key | For image generation (Direct API mode) | - |
+| Proxy URL | Proxy server URL (Proxy mode) | - |
+| Proxy Token | Auth token (Proxy mode) | - |
+
+### Generation Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Max Image Count | Maximum number of images (1-8) | 8 |
 | Image Style | Visual style for images | Infographic |
 | Aspect Ratio | Image aspect ratio | 16:9 |
 | Language | Language for titles/descriptions | Japanese |
+
+### Content Processing
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Send Mode | Amount of content to send to AI | Headings + excerpts |
+| Max Characters | Maximum characters to send | 30000 |
+
+### Storage Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
 | Attachment Folder | Where to save images | attachments/ai-summary |
-| Create Backup | Save original note before changes | ✅ |
+| Create Backup | Backup note before changes | ON |
+| Backup Location | Plugin data or Vault | Plugin data |
 
 ## Image Styles
 
 - **Infographic**: Modern data visualization with clean design
 - **Diagram**: Clear conceptual diagrams with geometric shapes
-- **Card**: Summary cards with bold visual hierarchy
+- **Summary Card**: Summary cards with bold visual hierarchy
 - **Whiteboard**: Hand-drawn educational style
 - **Slide**: Professional presentation design
 
+## Generation Flow
+
+1. **Plan Generation**: OpenAI GPT-5-mini analyzes the note and creates optimal image plans for each heading
+2. **Image Generation**: kie.ai nano-banana-pro generates images based on each plan (async polling)
+3. **Save**: Generated images are saved to the specified folder
+4. **Inject**: Images are automatically inserted at appropriate positions in the note
+
 ## Troubleshooting
 
-### "Please configure your API keys"
-- Check that you've entered both Gemini and kie.ai API keys
-- Verify the keys don't have extra spaces
+### "Please configure your API keys in settings"
+- Check that both OpenAI and kie.ai API keys are entered
+- Verify keys don't have extra spaces
 - Ensure connection mode is set to "Direct API"
 
-### "Gemini API error"
-- Verify your Gemini API key is valid
-- Check if you've exceeded the free tier limits
-- Try regenerating the key from Google AI Studio
+### "OpenAI API error"
+- Verify your OpenAI API key is valid
+- Check if you have remaining API credits
+- Regenerate key from [OpenAI Platform](https://platform.openai.com/)
 
 ### "kie.ai API error"
-- Confirm your kie.ai subscription is active
+- Confirm your kie.ai account is active
 - Check if you've hit rate limits
 - Verify the API key has correct permissions
 
-### "Image generation failed"
+### "Failed to generate image"
 - The prompt might be too complex - try with shorter notes
 - Check your internet connection
 - kie.ai might be experiencing high demand - try again later
 
-### "Image generation timed out"
-- This can happen with complex prompts
-- Try reducing the image count from 5 to 4
-- Check if kie.ai is experiencing delays
+### Images not generating
+- Check max image count setting
+- Verify note has headings (#, ##, ###)
+- Check console logs for errors (Cmd/Ctrl + Shift + I)
 
 ## Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/obsidian-gemini-plugin.git
-cd obsidian-gemini-plugin
+git clone https://github.com/shimayuz/obsidian-nanobanana.git
+cd obsidian-nanobanana
 
-# Install dependencies
+# Install plugin dependencies
 cd plugin && npm install
 
 # Build the plugin
@@ -159,9 +185,25 @@ npm run build
 npm run dev
 ```
 
+### Directory Structure
+
+```
+obsidian-nanobanana/
+├── plugin/           # Obsidian plugin
+│   ├── src/
+│   │   ├── main.ts          # Entry point
+│   │   ├── types.ts         # Type definitions
+│   │   ├── api/             # API clients
+│   │   ├── core/            # Core logic
+│   │   └── ui/              # UI components
+│   └── manifest.json
+├── proxy/            # Cloudflare Workers proxy
+└── shared/           # Shared type definitions
+```
+
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License
 
 ## Contributing
 
@@ -169,6 +211,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Support
 
-- 📖 [Documentation](https://github.com/your-username/obsidian-gemini-plugin/wiki)
-- 🐛 [Report Issues](https://github.com/your-username/obsidian-gemini-plugin/issues)
-- 💬 [Discussions](https://github.com/your-username/obsidian-gemini-plugin/discussions)
+- 🐛 [Report Issues](https://github.com/shimayuz/obsidian-nanobanana/issues)
+- 💬 [Discussions](https://github.com/shimayuz/obsidian-nanobanana/discussions)

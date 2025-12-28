@@ -1,16 +1,17 @@
-# Gemini Summary Images Plugin
+# Obsidian NanoBanana Plugin
 
-GoogleのGeminiとkie.aiのnano-banana-proモデルを使用して、ノート用のAI要約画像を生成するObsidianプラグインです。
+OpenAI GPTとkie.aiのnano-banana-proモデルを使用して、ノート用のAI要約画像を自動生成するObsidianプラグインです。
 
 ## 機能
 
-- 🎨 ノートごとに4-5個の美しい要約画像を生成
-- 🤖 Gemini 2.5 Flashによるインテリジェントなコンテンツ分析
-- 🖼️ kie.aiのnano-banana-proモデルによる高品質な画像
+- 🎨 ノートの内容を分析し、最大8枚の美しい要約画像を自動生成
+- 🤖 OpenAI GPT-5-miniによるインテリジェントなプラン生成（見出しごとに最適な画像を計画）
+- 🖼️ kie.aiのnano-banana-proモデルによる高品質な画像生成
 - 🔄 2つの接続モード：Direct API（シンプル）とProxy Server（上級者向け）
-- 💾 自動バックアップと元に戻す機能
-- 🎯 関連する見出しの後に画像をスマート配置
-- 📊 生成中の進捗追跡
+- 💾 自動バックアップとUndo機能
+- 🎯 見出しの後に画像をスマート配置
+- 📊 リアルタイム進捗表示（ポーリング状況も表示）
+- 🗑️ AI画像の一括削除コマンド
 
 ## クイックスタート（Direct APIモード）
 
@@ -18,39 +19,47 @@ GoogleのGeminiとkie.aiのnano-banana-proモデルを使用して、ノート�
 
 ### 1. プラグインのインストール
 
-1. [Releasesページ](https://github.com/your-username/obsidian-gemini-plugin/releases)から最新版をダウンロード
-2. `YourVault/.obsidian/plugins/obsidian-gemini-plugin/` に展開
+1. [Releasesページ](https://github.com/shimayuz/obsidian-nanobanana/releases)から最新版をダウンロード
+2. `YourVault/.obsidian/plugins/obsidian-nanobanana/` に展開
 3. Obsidianのコミュニティプラグイン設定で有効化
 
 ### 2. APIキーの取得
 
-#### Gemini APIキー
-1. [Google AI Studio](https://aistudio.google.com/app/apikey) にアクセス
-2. 「Create API Key」をクリック
-3. 既存のプロジェクトを選択するか、新しいプロジェクトを作成
-4. APIキーをコピー（`AIzaSy...` で始まる）
+#### OpenAI APIキー（プラン生成用）
+1. [OpenAI Platform](https://platform.openai.com/api-keys) にアクセス
+2. 「Create new secret key」をクリック
+3. APIキーをコピー（`sk-...` で始まる）
 
-#### kie.ai APIキー
+#### kie.ai APIキー（画像生成用）
 1. [kie.ai](https://kie.ai) にアクセスしてサインアップ
 2. アカウント設定またはAPIセクションに移動
 3. 新しいAPIキーを生成
-4. APIキーをコピー（`kie-...` で始まる）
+4. APIキーをコピー
 
 ### 3. プラグインの設定
 
-1. Obsidian設定 → コミュニティプラグイン → Gemini Summary Images → オプションを開く
+1. Obsidian設定 → コミュニティプラグイン → Gemini Summary Images → 設定を開く
 2. **接続モード**を「Direct API（推奨）」のままにする
 3. APIキーを入力：
-   - **Gemini APIキー**: ステップ2で取得したキーを貼り付け
-   - **kie.ai APIキー**: ステップ2で取得したキーを貼り付け
-4. 必要に応じて他の設定を調整（画像スタイル、数など）
+   - **OpenAI APIキー**: プラン生成用（`sk-...`）
+   - **kie.ai APIキー**: 画像生成用
+4. 必要に応じて他の設定を調整
 
 ### 4. 画像を生成！
 
 1. 任意のマークダウンノートを開く
-2. `Cmd/Ctrl + P` を押し、「Generate summary images」を検索
-3. 画像が生成される様子を進捗モーダルで確認
-4. 画像がノートに自動的に挿入されます
+2. `Cmd/Ctrl + P` を押し、「Generate Summary Images」を検索して実行
+3. 進捗モーダルで生成状況をリアルタイム確認
+4. 画像がノートの見出し直後に自動挿入されます
+
+## コマンド一覧
+
+| コマンド | 説明 |
+|---------|------|
+| Generate Summary Images | 現在のノートに要約画像を生成 |
+| Undo Last Image Injection | 直前の画像埋め込みを取り消し |
+| Remove All AI Images from Current Note | 現在のノートから全AI画像を削除 |
+| Show Last Backup | 最新のバックアップを表示 |
 
 ## 詳細設定（Proxyサーバーモード）
 
@@ -59,97 +68,114 @@ GoogleのGeminiとkie.aiのnano-banana-proモデルを使用して、ノート�
 - レート制限と使用状況の追跡を追加
 - APIキーをローカルマシンから除外
 
-### オプション1：Cloudflare Workersを使用（推奨）
+### Cloudflare Workersを使用
 
 1. プロキシサーバーをデプロイ：
    ```bash
-   # リポジトリをクローン
-   git clone https://github.com/your-username/obsidian-gemini-plugin.git
-   cd obsidian-gemini-plugin/proxy
+   git clone https://github.com/shimayuz/obsidian-nanobanana.git
+   cd obsidian-nanobanana/proxy
    
-   # Cloudflare Workersにデプロイ
    npm install -g wrangler
    wrangler login
    wrangler deploy
    ```
 
 2. Cloudflareダッシュボードで環境変数を設定：
-   - `GEMINI_API_KEY`: Gemini APIキー
+   - `OPENAI_API_KEY`: OpenAI APIキー
    - `KIE_API_KEY`: kie.ai APIキー
-   - `AUTH_TOKENS`: `ogsip_user123_abc` のようなトークンを作成
+   - `AUTH_TOKENS`: 認証トークン（例: `ogsip_user123_abc`）
 
 3. プラグインを設定：
-   - **接続モード**を「Proxy Server（Advanced）」に設定
-   - **Proxy URL**: WorkerのURL（例: `https://your-worker.workers.dev`）
+   - **接続モード**: 「Proxy Server（Advanced）」
+   - **Proxy URL**: WorkerのURL
    - **Proxy Token**: 作成した認証トークン
 
-### オプション2：ローカルで実行
+## 設定項目
 
-```bash
-cd obsidian-gemini-plugin/proxy
-npm install
-npm run dev
-```
-
-プラグインを以下で設定：
-- Proxy URL: `http://localhost:8787`
-- Proxy Token: 設定したトークン
-
-## 設定
+### 接続設定
 
 | 設定項目 | 説明 | デフォルト |
 |---------|------|---------|
-| 接続モード | Direct APIまたはProxy Server | Direct API |
-| 画像数 | 生成する画像の数 | 4 |
-| 画像スタイル | 画像の視覚スタイル | インフォグラフィック |
+| 接続モード | Direct API または Proxy Server | Direct API |
+| OpenAI APIキー | プラン生成用（Direct APIモード） | - |
+| kie.ai APIキー | 画像生成用（Direct APIモード） | - |
+| Proxy URL | プロキシサーバーURL（Proxyモード） | - |
+| Proxy Token | 認証トークン（Proxyモード） | - |
+
+### 生成設定
+
+| 設定項目 | 説明 | デフォルト |
+|---------|------|---------|
+| 最大画像数 | 生成する画像の最大数（1-8） | 8 |
+| 画像スタイル | 画像の視覚スタイル | Infographic |
 | アスペクト比 | 画像のアスペクト比 | 16:9 |
 | 言語 | タイトルと説明の言語 | 日本語 |
+
+### コンテンツ処理
+
+| 設定項目 | 説明 | デフォルト |
+|---------|------|---------|
+| 送信モード | AIに送信するコンテンツ量 | Headings + excerpts |
+| 最大文字数 | 送信する最大文字数 | 30000 |
+
+### 保存設定
+
+| 設定項目 | 説明 | デフォルト |
+|---------|------|---------|
 | 添付フォルダ | 画像の保存先 | attachments/ai-summary |
-| バックアップ作成 | 変更前に元のノートを保存 | ✅ |
+| バックアップ作成 | 変更前にノートをバックアップ | ON |
+| バックアップ場所 | プラグインデータ or Vault | Plugin data |
 
 ## 画像スタイル
 
-- **インフォグラフィック**: クリーンなデザインのモダンなデータ可視化
-- **ダイアグラム**: 幾何学的形状を使用した明確な概念図
-- **カード**: 大胆な視覚階層を持つサマリーカード
-- **ホワイトボード**: 手描き風の教育スタイル
-- **スライド**: プロフェッショナルなプレゼンテーションデザイン
+- **Infographic**: クリーンなデザインのモダンなデータ可視化
+- **Diagram**: 幾何学的形状を使用した明確な概念図
+- **Summary Card**: 大胆な視覚階層を持つサマリーカード
+- **Whiteboard**: 手描き風の教育スタイル
+- **Slide**: プロフェッショナルなプレゼンテーションデザイン
+
+## 生成フロー
+
+1. **プラン生成**: OpenAI GPT-5-miniがノートを分析し、各見出しに最適な画像プランを作成
+2. **画像生成**: kie.ai nano-banana-proで各プランに基づいて画像を生成（非同期ポーリング）
+3. **保存**: 生成された画像を指定フォルダに保存
+4. **埋め込み**: 画像をノートの適切な位置に自動挿入
 
 ## トラブルシューティング
 
-### 「APIキーを設定してください」と表示される
-- Geminiとkie.aiの両方のAPIキーが入力されているか確認
+### 「Please configure your API keys in settings」
+- OpenAIとkie.aiの両方のAPIキーが入力されているか確認
 - キーに余分なスペースがないか確認
 - 接続モードが「Direct API」に設定されているか確認
 
-### 「Gemini API error」
-- Gemini APIキーが有効か確認
-- 無料ティアの制限を超えていないか確認
-- Google AI Studioからキーを再生成してみる
+### 「OpenAI API error」
+- OpenAI APIキーが有効か確認
+- APIクレジットが残っているか確認
+- [OpenAI Platform](https://platform.openai.com/)でキーを再生成
 
 ### 「kie.ai API error」
-- kie.aiのサブスクリプションが有効か確認
+- kie.aiのアカウントが有効か確認
 - レート制限に達していないか確認
 - APIキーに正しい権限があるか確認
 
-### 「画像生成に失敗しました」
+### 「Failed to generate image」
 - プロンプトが複雑すぎる可能性 - より短いノートで試す
 - インターネット接続を確認
 - kie.aiが高負荷状態かもしれません - 後でもう一度試す
 
-### 「画像生成がタイムアウトしました」
-- 複雑なプロンプトで発生することがあります
-- 画像数を5から4に減らしてみる
-- kie.aiに遅延があるか確認
+### 画像が生成されない
+- 最大画像数の設定を確認
+- ノートに見出し（#, ##, ###）があるか確認
+- コンソールログでエラーを確認（Cmd/Ctrl + Shift + I）
 
 ## 開発
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/your-username/obsidian-gemini-plugin.git
-cd obsidian-gemini-plugin
+git clone https://github.com/shimayuz/obsidian-nanobanana.git
+cd obsidian-nanobanana
 
-# 依存関係をインストール
+# プラグインの依存関係をインストール
 cd plugin && npm install
 
 # プラグインをビルド
@@ -159,9 +185,25 @@ npm run build
 npm run dev
 ```
 
+### ディレクトリ構造
+
+```
+obsidian-nanobanana/
+├── plugin/           # Obsidianプラグイン本体
+│   ├── src/
+│   │   ├── main.ts          # エントリポイント
+│   │   ├── types.ts         # 型定義
+│   │   ├── api/             # APIクライアント
+│   │   ├── core/            # コアロジック
+│   │   └── ui/              # UIコンポーネント
+│   └── manifest.json
+├── proxy/            # Cloudflare Workersプロキシ
+└── shared/           # 共有型定義
+```
+
 ## ライセンス
 
-MITライセンス - 詳細は[LICENSE](LICENSE)ファイルを参照。
+MITライセンス
 
 ## 貢献
 
@@ -169,6 +211,5 @@ MITライセンス - 詳細は[LICENSE](LICENSE)ファイルを参照。
 
 ## サポート
 
-- 📖 [ドキュメント](https://github.com/your-username/obsidian-gemini-plugin/wiki)
-- 🐛 [問題報告](https://github.com/your-username/obsidian-gemini-plugin/issues)
-- 💬 [ディスカッション](https://github.com/your-username/obsidian-gemini-plugin/discussions)
+- 🐛 [問題報告](https://github.com/shimayuz/obsidian-nanobanana/issues)
+- 💬 [ディスカッション](https://github.com/shimayuz/obsidian-nanobanana/discussions)
