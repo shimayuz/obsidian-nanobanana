@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-gemini-summary-images",
-  "version": "0.1.0",
-  "description": "Generate AI-powered summary images for Obsidian notes using Gemini",
+  "name": "obsidian-docs-summary-to-image",
+  "version": "0.2.0",
+  "description": "Generate AI-powered summary images for Obsidian notes",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
@@ -10,7 +10,7 @@
   },
   "keywords": [
     "obsidian",
-    "gemini",
+    "docs",
     "ai",
     "image-generation",
     "summary"

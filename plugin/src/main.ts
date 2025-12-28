@@ -92,7 +92,7 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
 
     // 設定チェック
     if (this.settings.connectionMode === 'direct') {
-      if (!this.settings.geminiApiKey || !this.settings.kieApiKey) {
+      if (!this.settings.openaiApiKey || !this.settings.kieApiKey) {
         new Notice('Please configure your API keys in settings');
         return;
       }
@@ -121,6 +121,8 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
       // 3. Plan生成
       progressModal.update({ phase: 'planning', currentItem: 0, totalItems: 0, message: 'Generating plan...' });
       const plan = await this.apiClient.generatePlan(parsed, this.settings);
+      
+      console.log('Generated plan:', plan);
 
       // 4. 画像生成ループ
       const totalItems = plan.items.length;
@@ -314,28 +316,56 @@ class GeminiSettingTab extends PluginSettingTab {
     directApiContainer.createEl('h3', { text: 'Direct API Settings' });
 
     new Setting(directApiContainer)
-      .setName('Gemini API Key')
-      .setDesc('Get your key from Google AI Studio')
-      .addText((text) =>
+      .setName('OpenAI API Key')
+      .setDesc('Get your key from OpenAI Platform (for plan generation)')
+      .addText((text) => {
         text
-          .setPlaceholder('AIzaSy...')
-          .setValue(this.plugin.settings.geminiApiKey)
+          .setPlaceholder('sk-...')
+          .setValue(this.plugin.settings.openaiApiKey)
           .onChange(async (value) => {
-            this.plugin.settings.geminiApiKey = value;
+            this.plugin.settings.openaiApiKey = value;
             await this.plugin.saveSettings();
+          });
+        text.inputEl.type = 'password';
+        return text;
+      })
+      .addExtraButton((button) =>
+        button
+          .setIcon('eye')
+          .setTooltip('Show/Hide API Key')
+          .onClick(() => {
+            const input = button.extraSettingsEl.parentElement?.querySelector('input');
+            if (input) {
+              input.type = input.type === 'password' ? 'text' : 'password';
+              button.setIcon(input.type === 'password' ? 'eye' : 'eye-off');
+            }
           })
       );
 
     new Setting(directApiContainer)
       .setName('kie.ai API Key')
-      .setDesc('Get your key from kie.ai')
-      .addText((text) =>
+      .setDesc('Get your key from kie.ai (for image generation)')
+      .addText((text) => {
         text
           .setPlaceholder('kie-...')
           .setValue(this.plugin.settings.kieApiKey)
           .onChange(async (value) => {
             this.plugin.settings.kieApiKey = value;
             await this.plugin.saveSettings();
+          });
+        text.inputEl.type = 'password';
+        return text;
+      })
+      .addExtraButton((button) =>
+        button
+          .setIcon('eye')
+          .setTooltip('Show/Hide API Key')
+          .onClick(() => {
+            const input = button.extraSettingsEl.parentElement?.querySelector('input');
+            if (input) {
+              input.type = input.type === 'password' ? 'text' : 'password';
+              button.setIcon(input.type === 'password' ? 'eye' : 'eye-off');
+            }
           })
       );
 
@@ -359,13 +389,27 @@ class GeminiSettingTab extends PluginSettingTab {
     new Setting(proxyContainer)
       .setName('Proxy Token')
       .setDesc('Your authentication token for the proxy server')
-      .addText((text) =>
+      .addText((text) => {
         text
           .setPlaceholder('ogsip_...')
           .setValue(this.plugin.settings.proxyToken)
           .onChange(async (value) => {
             this.plugin.settings.proxyToken = value;
             await this.plugin.saveSettings();
+          });
+        text.inputEl.type = 'password';
+        return text;
+      })
+      .addExtraButton((button) =>
+        button
+          .setIcon('eye')
+          .setTooltip('Show/Hide Token')
+          .onClick(() => {
+            const input = button.extraSettingsEl.parentElement?.querySelector('input');
+            if (input) {
+              input.type = input.type === 'password' ? 'text' : 'password';
+              button.setIcon(input.type === 'password' ? 'eye' : 'eye-off');
+            }
           })
       );
 
@@ -380,15 +424,15 @@ class GeminiSettingTab extends PluginSettingTab {
     containerEl.createEl('h3', { text: 'Generation' });
 
     new Setting(containerEl)
-      .setName('Image Count')
-      .setDesc('Number of images to generate per note')
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOption('4', '4 images')
-          .addOption('5', '5 images')
-          .setValue(String(this.plugin.settings.imageCount))
+      .setName('Max Image Count')
+      .setDesc('Maximum number of images to generate (actual count depends on headings)')
+      .addSlider((slider) =>
+        slider
+          .setLimits(1, 8, 1)
+          .setValue(this.plugin.settings.maxImageCount)
+          .setDynamicTooltip()
           .onChange(async (value) => {
-            this.plugin.settings.imageCount = parseInt(value) as 4 | 5;
+            this.plugin.settings.maxImageCount = value;
             await this.plugin.saveSettings();
           })
       );

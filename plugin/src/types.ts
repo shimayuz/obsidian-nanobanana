@@ -10,7 +10,8 @@ export interface PluginSettings {
   connectionMode: 'direct' | 'proxy';
   
   // Direct APIモード用
-  geminiApiKey: string;
+  geminiApiKey: string;  // 将来的に削除予定
+  openaiApiKey: string;  // OpenAI API key for plan generation
   kieApiKey: string;
   
   // Proxyモード用
@@ -18,7 +19,7 @@ export interface PluginSettings {
   proxyToken: string;
 
   // 生成設定
-  imageCount: 4 | 5;
+  maxImageCount: number;  // 最大画像数（1-8、実際の数は見出し数による）
   imageStyle: ImageStyle;
   aspectRatio: AspectRatio;
   language: Language;
@@ -44,13 +45,14 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   
   // Direct API用
   geminiApiKey: '',
+  openaiApiKey: '',
   kieApiKey: '',
   
   // Proxy用
   proxyUrl: 'https://gemini-image-proxy.your-domain.workers.dev',
   proxyToken: '',
 
-  imageCount: 4,
+  maxImageCount: 8,
   imageStyle: 'infographic',
   aspectRatio: '16:9',
   language: 'ja',

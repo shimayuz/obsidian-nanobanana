@@ -40,8 +40,8 @@ export interface PlanRequest {
 }
 
 export interface PlanSettings {
-  /** 生成する画像枚数 */
-  imageCount: 4 | 5;
+  /** 生成する画像枚数（最大値、実際は見出し数による） */
+  imageCount: number;
 
   /** 画像スタイル */
   style: ImageStyle;
@@ -225,7 +225,7 @@ export const API_LIMITS = {
   MAX_SECTIONS: 20,
 
   /** 1ノートあたりの最大画像枚数 */
-  MAX_IMAGES_PER_NOTE: 5,
+  MAX_IMAGES_PER_NOTE: 8,
 
   /** Plan APIレート制限（回/分） */
   PLAN_RATE_LIMIT_PER_MINUTE: 10,

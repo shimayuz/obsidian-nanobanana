@@ -47,7 +47,7 @@ export class ProxyClient {
     const request: PlanRequest = {
       noteContent: compressedContent,
       settings: {
-        imageCount: settings.imageCount,
+        imageCount: settings.maxImageCount,
         style: settings.imageStyle,
         language: settings.language,
       },

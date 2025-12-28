@@ -1,5 +1,5 @@
 /**
- * Direct API Client - Geminiとkie.aiを直接呼び出す
+ * Direct API Client - OpenAIとkie.aiを直接呼び出す
  */
 
 import { requestUrl, RequestUrlResponse } from 'obsidian';
@@ -20,72 +20,128 @@ export type ProgressCallback = (progress: {
 }) => void;
 
 export class DirectApiClient {
-  private geminiApiKey: string;
+  private openaiApiKey: string;
   private kieApiKey: string;
 
   constructor(settings: PluginSettings) {
-    this.geminiApiKey = settings.geminiApiKey;
+    this.openaiApiKey = settings.openaiApiKey;
     this.kieApiKey = settings.kieApiKey;
   }
 
   /**
-   * Plan生成APIを呼び出す（Gemini直接）
+   * Plan生成APIを呼び出す（OpenAI gpt-5-mini）
    */
   async generatePlan(parsed: ParsedNote, settings: PluginSettings): Promise<PlanResponse> {
-    if (!this.geminiApiKey) {
-      throw new Error('Gemini API key is required');
+    if (!this.openaiApiKey) {
+      throw new Error('OpenAI API key is required');
     }
 
     const compressedContent = this.compressContent(parsed, settings.maxCharacters);
 
-    const prompt = `以下のノート内容を要約し、${settings.imageCount}個の画像生成プランを作成してください。
+    const systemPrompt = `あなたは画像生成プランを作成するエキスパートです。以下の指示に従って、ノート記事の内容を要約し、見出しの数だけ画像生成プランを作成してください（最大${settings.maxImageCount}枚まで）。
 
-各画像について以下のJSON形式で生成してください：
+## Liquid Glass (Apple-like) + List Infographic Style (16:9)
+
+### Visual Theme (Liquid Glass)
+- Use translucent frosted-glass panels (layered cards) with soft blur, subtle refraction feel, and specular highlights.
+- Glass panels should feel "tinted" by accent colors, but keep high legibility and ample whitespace.
+
+### Recommended Color Palette (Apple System Colors as Liquid Glass tints)
+- Base / Background:
+  - Light neutral background: #F2F2F7 (soft gray-white)
+  - Primary text: #000000
+  - Separator / hairline: rgba(120,120,128,0.20)
+- Accent tints (use 1–2 per slide, do NOT rainbow everything):
+  - systemTeal:   #5AC8FA
+  - systemBlue:   #007AFF
+  - systemIndigo: #5856D6
+  - systemPurple: #AF52DE
+  - systemPink:   #FF2D55
+  - Optional for emphasis only:
+    - systemGreen:  #34C759
+    - systemOrange: #FF9500
+    - systemYellow: #FFCC00
+    - systemRed:    #FF3B30
+- If you use gradients, prefer "teal → blue → purple" as the main Liquid Glass gradient accent.
+
+### Layout Rule (List-style Infographic)
+- Each slide must be a LIST infographic:
+  - Vertical stack of 4–7 items (cards or rows).
+  - Each item: icon/bullet → short label → optional micro-sublabel (very short).
+  - Use consistent spacing, alignment, and repeating rhythm (grid).
+- Allow variants across images while staying list-based:
+  - numbered list, checklist, steps list, pros/cons list, timeline-as-list, glossary list.
+
+### Typography (M PLUS 1)
+- Use "M PLUS 1" for all text (title, labels, captions).
+- Minimum font size: 24px (no small text).
+- Keep text minimal: short labels only (3–6 words max per label). Avoid paragraphs.
+
+### Shape & Components
+- Rounded corners everywhere (cards, pills, chips): large radius (16–24px).
+- Use subtle shadows, soft inner highlights on glass cards, and consistent icon stroke weight.
+
+### Quality / Negative Constraints
+- No dense text blocks, no tiny legends, no screenshots, no watermarks/logos.
+- Prioritize clarity: strong contrast between text and glass surface.
+
+必ず以下のJSON形式のみで出力してください。説明文は不要です。
 {
   "items": [
     {
       "id": "img1",
       "title": "画像のタイトル",
-      "afterHeading": "挿入位置の見出し",
-      "prompt": "画像生成プロンプト（${settings.imageStyle}スタイル、${settings.language}言語）",
+      "afterHeading": "挿入位置の見出し（ノート内の実際の見出しテキスト）",
+      "prompt": "画像生成プロンプト（${settings.imageStyle}スタイル、${settings.language}言語、上記Liquid Glassスタイル指示を含む詳細なプロンプト）",
       "description": "画像の説明"
     }
   ]
-}
+}`;
+
+    const userPrompt = `以下のノート記事の内容を最初から最後まで熟読し、その内容を要約したうえで、見出しの数だけ画像生成プランを作成してください。
 
 ノート内容:
 ${compressedContent}`;
 
     try {
-      const response = await requestUrl({
-        url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.geminiApiKey}`,
+      const requestBody = {
+        model: 'gpt-5-mini-2025-08-07',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        max_completion_tokens: 16384,
+        response_format: { type: 'json_object' }
+      };
+      
+      console.log('� OpenAI API: Generating plan...');
+      
+      const fetchResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.openaiApiKey}`,
         },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }]
-        })
+        body: JSON.stringify(requestBody)
       });
 
-      if (response.status >= 400) {
-        throw new Error(`Gemini API error: ${response.status}`);
+      const responseData = await fetchResponse.json();
+
+      if (!fetchResponse.ok) {
+        console.error('❌ OpenAI API error:', responseData?.error?.message);
+        throw new Error(`OpenAI API error: ${fetchResponse.status} - ${responseData?.error?.message || JSON.stringify(responseData)}`);
       }
 
-      const data = response.json as any;
-      const text = data.candidates[0].content.parts[0].text;
+      const text = responseData.choices[0].message.content;
       
-      // JSON部分を抽出
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('Failed to parse plan from Gemini response');
+      if (!text || text.trim() === '') {
+        console.error('❌ Empty response from OpenAI');
+        throw new Error('OpenAI returned empty response. Try again.');
       }
-
-      const plan = JSON.parse(jsonMatch[0]);
+      
+      console.log('✅ OpenAI API: Plan generated successfully');
+      
+      const plan = JSON.parse(text);
       
       return {
         version: '1',
@@ -116,6 +172,8 @@ ${compressedContent}`;
 
     onProgress?.({ status: 'creating', message: 'Creating image generation task...' });
 
+    console.log('🎨 kie.ai: Creating image task...');
+
     try {
       // 1. タスク作成
       const createResponse = await requestUrl({
@@ -128,7 +186,7 @@ ${compressedContent}`;
         body: JSON.stringify({
           model: 'nano-banana-pro',
           input: {
-            prompt: this.enhancePrompt(prompt, settings.imageStyle),
+            prompt: prompt,
             aspect_ratio: settings.aspectRatio || '1:1',
             resolution: '1K',
             output_format: 'png'
@@ -141,53 +199,76 @@ ${compressedContent}`;
       }
 
       const taskData = createResponse.json as any;
-      const jobId = taskData.job_id;
+      const jobId = taskData.data?.taskId || taskData.taskId;
 
       if (!jobId) {
         throw new Error('No job_id in response');
       }
 
+      console.log('🎨 kie.ai: Task created, polling for result...');
       onProgress?.({ status: 'generating', message: 'Generating image...' });
 
       // 2. ポーリング
       let attempts = 0;
       const maxAttempts = 60; // 最大5分
 
+      // 最初のポーリングまで少し待機
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       while (attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 5000)); // 5秒待機
 
+        // recordInfoエンドポイントでステータス確認
+        const statusUrl = `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${jobId}`;
+        
         const statusResponse = await requestUrl({
-          url: `https://api.kie.ai/api/v1/jobs/${jobId}`,
+          url: statusUrl,
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${this.kieApiKey}`,
           }
         });
-
+        
         if (statusResponse.status >= 400) {
           throw new Error(`Failed to check status: ${statusResponse.status}`);
         }
-
+        
         const statusData = statusResponse.json as any;
         
-        if (statusData.status === 'completed' && statusData.output?.image_url) {
-          onProgress?.({ status: 'downloading', message: 'Downloading image...' });
-          
-          // 3. 画像ダウンロード
-          const imageResponse = await requestUrl({
-            url: statusData.output.image_url,
-            method: 'GET',
-          });
-
-          if (imageResponse.status >= 400) {
-            throw new Error(`Failed to download image: ${imageResponse.status}`);
+        // state: waiting, queuing, generating, success, fail
+        if (statusData.code === 200 && statusData.data?.state === 'success') {
+          // resultJsonは文字列なのでパースが必要
+          let resultUrls: string[] = [];
+          if (statusData.data?.resultJson) {
+            try {
+              const resultData = JSON.parse(statusData.data.resultJson);
+              resultUrls = resultData.resultUrls || [];
+            } catch (e) {
+              console.error('Failed to parse resultJson:', e);
+            }
           }
+          
+          if (resultUrls.length > 0) {
+            onProgress?.({ status: 'downloading', message: 'Downloading image...' });
+            
+            // 画像ダウンロード
+            const imageResponse = await requestUrl({
+              url: resultUrls[0],
+              method: 'GET',
+            });
 
-          return imageResponse.arrayBuffer;
+            if (imageResponse.status >= 400) {
+              throw new Error(`Failed to download image: ${imageResponse.status}`);
+            }
+
+            console.log('✅ kie.ai: Image generated successfully');
+            return imageResponse.arrayBuffer;
+          }
         }
 
-        if (statusData.status === 'failed') {
-          throw new Error(`Image generation failed: ${statusData.error?.message || 'Unknown error'}`);
+        if (statusData.data?.state === 'fail') {
+          console.error('❌ kie.ai: Image generation failed');
+          throw new Error(`Image generation failed: ${statusData.data?.failMsg || 'Unknown error'}`);
         }
 
         attempts++;

@@ -1,46 +1,76 @@
-/* Gemini Summary Images Plugin Styles */
+/* Docs Summary to Image Plugin Styles */
 
 /* 進捗モーダル */
-.gemini-summary-progress-modal {
+.docs-summary-progress-modal {
   padding: 20px;
+  text-align: center;
 }
 
-.gemini-summary-progress-modal .progress-bar-container {
+.docs-summary-progress-modal h2 {
+  margin: 0 0 16px 0;
+  font-size: 1.2em;
+}
+
+/* バナナアニメーション */
+.docs-summary-progress-modal .banana-animation {
+  font-family: monospace;
+  font-size: 1.1em;
+  color: var(--text-accent);
+  margin: 0 0 12px 0;
+  padding: 8px;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.docs-summary-progress-modal .progress-bar-container {
   width: 100%;
-  height: 8px;
+  height: 12px;
   background-color: var(--background-modifier-border);
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
   margin: 16px 0;
 }
 
-.gemini-summary-progress-modal .progress-bar {
+.docs-summary-progress-modal .progress-bar {
   height: 100%;
-  background-color: var(--interactive-accent);
+  background: linear-gradient(90deg, #FFE135 0%, #FFC107 50%, #FF9800 100%);
+  border-radius: 6px;
   transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(255, 193, 7, 0.5);
 }
 
-.gemini-summary-progress-modal .progress-message {
+.docs-summary-progress-modal .progress-message {
   margin: 12px 0;
   color: var(--text-normal);
 }
 
-.gemini-summary-progress-modal .progress-status {
+.docs-summary-progress-modal .progress-status {
   font-size: 0.9em;
   color: var(--text-muted);
   text-align: center;
 }
 
 /* フェーズ別スタイル */
-.gemini-summary-progress-modal.phase-done .progress-bar {
-  background-color: var(--color-green);
+.docs-summary-progress-modal.phase-done .progress-bar {
+  background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
 }
 
-.gemini-summary-progress-modal.phase-error .progress-bar {
-  background-color: var(--color-red);
+.docs-summary-progress-modal.phase-done .banana-animation {
+  color: var(--color-green);
 }
 
-.gemini-summary-progress-modal.phase-error .progress-message {
+.docs-summary-progress-modal.phase-error .progress-bar {
+  background: linear-gradient(90deg, #f44336 0%, #ff5722 100%);
+  box-shadow: 0 0 8px rgba(244, 67, 54, 0.5);
+}
+
+.docs-summary-progress-modal.phase-error .progress-message {
+  color: var(--color-red);
+}
+
+.docs-summary-progress-modal.phase-error .banana-animation {
   color: var(--color-red);
 }
 
