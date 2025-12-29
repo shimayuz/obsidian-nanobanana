@@ -73,7 +73,7 @@ export class ProxyClient {
       prompt,
       style: settings.imageStyle,
       aspectRatio: settings.aspectRatio,
-      resolution: '1K',
+      resolution: settings.resolution || '1K',
       outputFormat: 'png',
     };
 

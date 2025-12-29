@@ -288,7 +288,7 @@ class GeminiSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: 'Gemini Summary Images Settings' });
+    containerEl.createEl('h2', { text: 'Docs Summary to Image Settings' });
 
     // 接続モード
     containerEl.createEl('h3', { text: 'Connection Mode' });
@@ -465,6 +465,21 @@ class GeminiSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.aspectRatio)
           .onChange(async (value) => {
             this.plugin.settings.aspectRatio = value as any;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName('Resolution')
+      .setDesc('Image resolution (4K costs more credits)')
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption('1K', '1K')
+          .addOption('2K', '2K')
+          .addOption('4K', '4K ⚠️ High Price')
+          .setValue(this.plugin.settings.resolution)
+          .onChange(async (value) => {
+            this.plugin.settings.resolution = value as any;
             await this.plugin.saveSettings();
           })
       );

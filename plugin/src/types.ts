@@ -2,7 +2,7 @@
  * プラグイン内部型定義
  */
 
-import type { ImageStyle, AspectRatio, Language } from '../../shared/api-types';
+import type { ImageStyle, AspectRatio, Language, Resolution } from '../../shared/api-types';
 
 /** プラグイン設定 */
 export interface PluginSettings {
@@ -22,6 +22,7 @@ export interface PluginSettings {
   maxImageCount: number;  // 最大画像数（1-8、実際の数は見出し数による）
   imageStyle: ImageStyle;
   aspectRatio: AspectRatio;
+  resolution: Resolution;
   language: Language;
 
   // 保存設定
@@ -55,6 +56,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   maxImageCount: 8,
   imageStyle: 'infographic',
   aspectRatio: '16:9',
+  resolution: '1K',
   language: 'ja',
 
   attachmentFolder: 'attachments/ai-summary',

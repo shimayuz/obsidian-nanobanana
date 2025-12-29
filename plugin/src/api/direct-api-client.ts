@@ -188,7 +188,7 @@ ${compressedContent}`;
           input: {
             prompt: prompt,
             aspect_ratio: settings.aspectRatio || '1:1',
-            resolution: '1K',
+            resolution: settings.resolution || '1K',
             output_format: 'png'
           }
         })
