@@ -106,12 +106,15 @@ export interface GenerationProgress {
 
 /** 画像挿入マーカー */
 export const AI_SUMMARY_MARKER = {
-  START: (id: string, timestamp: string) =>
-    `<!-- ai-summary:start id="${id}" generated="${timestamp}" -->`,
+  START: (id: string, timestamp: string, prompt?: string) => {
+    const promptAttr = prompt ? ` prompt="${encodeURIComponent(prompt)}"` : '';
+    return `<!-- ai-summary:start id="${id}" generated="${timestamp}"${promptAttr} -->`;
+  },
   END: (id: string) =>
     `<!-- ai-summary:end id="${id}" -->`,
   REGEX: {
     BLOCK: /<!-- ai-summary:start id="([^"]+)"[^>]*-->[\s\S]*?<!-- ai-summary:end id="\1" -->\n?/g,
-    START: /<!-- ai-summary:start id="([^"]+)" generated="([^"]+)" -->/,
+    BLOCK_WITH_PROMPT: /<!-- ai-summary:start id="([^"]+)" generated="([^"]+)"(?: prompt="([^"]*)")? -->([\s\S]*?)<!-- ai-summary:end id="\1" -->\n?/g,
+    START: /<!-- ai-summary:start id="([^"]+)" generated="([^"]+)"(?: prompt="([^"]*)")? -->/,
   },
 };

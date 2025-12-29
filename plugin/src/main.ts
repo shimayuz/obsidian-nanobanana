@@ -10,6 +10,7 @@ import {
   Notice,
   TFile,
   Modal,
+  Editor,
 } from 'obsidian';
 
 import type { PluginSettings, GenerationProgress } from './types';
@@ -78,6 +79,13 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
       name: 'Show Last Backup',
       callback: () => this.showBackup(),
     });
+
+    // カーソル位置の画像を再生成
+    this.addCommand({
+      id: 'regenerate-image-at-cursor',
+      name: 'Regenerate Image at Cursor',
+      editorCallback: (editor) => this.regenerateImageAtCursor(editor),
+    });
   }
 
   /**
@@ -126,7 +134,7 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
 
       // 4. 画像生成ループ
       const totalItems = plan.items.length;
-      const generatedImages: Array<{ id: string; path: string; item: typeof plan.items[0] }> = [];
+      const generatedImages: Array<{ id: string; path: string; item: typeof plan.items[0]; prompt?: string }> = [];
 
       for (let i = 0; i < totalItems; i++) {
         const item = plan.items[i];
@@ -161,7 +169,7 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
             message: `Saving image ${i + 1}/${totalItems}...`,
           });
           const imagePath = await this.imageInjector.saveImage(file, item.id, imageData);
-          generatedImages.push({ id: item.id, path: imagePath, item });
+          generatedImages.push({ id: item.id, path: imagePath, item, prompt: item.prompt });
         } catch (error) {
           console.error(`Failed to generate image ${item.id}:`, error);
           new Notice(`Failed to generate image: ${item.title}`);
@@ -224,6 +232,124 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
     } else {
       new Notice(result.message);
     }
+  }
+
+  /**
+   * カーソル位置の画像を再生成
+   */
+  async regenerateImageAtCursor(editor: Editor) {
+    const file = this.app.workspace.getActiveFile();
+    if (!file) {
+      new Notice('Please open a note first');
+      return;
+    }
+
+    const cursor = editor.getCursor();
+    const content = editor.getValue();
+    
+    // カーソル位置を含む画像ブロックを検索
+    const blockInfo = this.findImageBlockAtCursor(content, cursor.line);
+    
+    if (!blockInfo) {
+      new Notice('No AI image block found at cursor position');
+      return;
+    }
+
+    const { id, prompt, blockStart, blockEnd } = blockInfo;
+
+    if (!prompt) {
+      new Notice('No prompt found in this image block. Cannot regenerate.');
+      return;
+    }
+
+    // 再生成開始
+    const loadingNotice = new Notice('Regenerating image...', 0);
+
+    try {
+      // 画像生成
+      const imageData = await this.apiClient.generateImage(
+        decodeURIComponent(prompt),
+        this.settings,
+        (progress: { status: string; message: string; progress?: number }) => {
+          loadingNotice.setMessage(`Regenerating: ${progress.message}`);
+        }
+      );
+
+      // 画像保存（同じIDで上書き）
+      const imagePath = await this.imageInjector.saveImage(file, id, imageData);
+
+      // 新しいブロックを生成
+      const timestamp = new Date().toISOString();
+      const decodedPrompt = decodeURIComponent(prompt);
+      const newBlock = [
+        `<!-- ai-summary:start id="${id}" generated="${timestamp}" prompt="${prompt}" -->`,
+        `![[${imagePath}]]`,
+        `*Regenerated image*`,
+        `<!-- ai-summary:end id="${id}" -->`,
+      ].join('\n');
+
+      // エディタ内のブロックを置換
+      const lines = content.split('\n');
+      const newContent = [
+        ...lines.slice(0, blockStart),
+        newBlock,
+        ...lines.slice(blockEnd + 1),
+      ].join('\n');
+
+      editor.setValue(newContent);
+
+      loadingNotice.hide();
+      new Notice('Image regenerated successfully!');
+    } catch (error) {
+      loadingNotice.hide();
+      console.error('Regeneration failed:', error);
+      new Notice(`Failed to regenerate: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * カーソル位置の画像ブロックを検索
+   */
+  private findImageBlockAtCursor(content: string, cursorLine: number): {
+    id: string;
+    prompt: string | null;
+    blockStart: number;
+    blockEnd: number;
+  } | null {
+    const lines = content.split('\n');
+    const startRegex = /<!-- ai-summary:start id="([^"]+)" generated="([^"]+)"(?: prompt="([^"]*)")? -->/;
+    const endRegex = /<!-- ai-summary:end id="([^"]+)" -->/;
+
+    let blockStart = -1;
+    let currentId = '';
+    let currentPrompt: string | null = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      const startMatch = lines[i].match(startRegex);
+      if (startMatch) {
+        blockStart = i;
+        currentId = startMatch[1];
+        currentPrompt = startMatch[3] || null;
+      }
+
+      const endMatch = lines[i].match(endRegex);
+      if (endMatch && endMatch[1] === currentId) {
+        // ブロック終了
+        if (cursorLine >= blockStart && cursorLine <= i) {
+          return {
+            id: currentId,
+            prompt: currentPrompt,
+            blockStart,
+            blockEnd: i,
+          };
+        }
+        blockStart = -1;
+        currentId = '';
+        currentPrompt = null;
+      }
+    }
+
+    return null;
   }
 
   /**

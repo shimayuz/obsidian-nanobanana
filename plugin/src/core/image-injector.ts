@@ -13,6 +13,7 @@ interface GeneratedImage {
   id: string;
   path: string;
   item: PlanItem;
+  prompt?: string;  // 再生成用にプロンプトを保持
 }
 
 export class ImageInjector {
@@ -123,11 +124,11 @@ export class ImageInjector {
    */
   private createImageBlock(image: GeneratedImage): string {
     const timestamp = new Date().toISOString();
-    const { id, path, item } = image;
+    const { id, path, item, prompt } = image;
 
     return [
       '',
-      AI_SUMMARY_MARKER.START(id, timestamp),
+      AI_SUMMARY_MARKER.START(id, timestamp, prompt),
       `![[${path}]]`,
       `*${item.title}: ${item.description}*`,
       AI_SUMMARY_MARKER.END(id),
