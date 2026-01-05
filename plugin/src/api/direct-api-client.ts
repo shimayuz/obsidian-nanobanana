@@ -38,67 +38,75 @@ export class DirectApiClient {
 
     const compressedContent = this.compressContent(parsed, settings.maxCharacters);
 
-    const systemPrompt = `あなたは画像生成プランを作成するエキスパートです。以下の指示に従って、ノート記事の内容を要約し、見出しの数だけ画像生成プランを作成してください（最大${settings.maxImageCount}枚まで）。
+    const systemPrompt = `あなたは視覚的に魅力的なインフォグラフィックを設計するエキスパートです。ノート記事の各セクションの**核心的なメッセージ**を抽出し、それを**図解・ダイアグラム・フローチャート**などで視覚的に表現する画像生成プランを作成してください（最大${settings.maxImageCount}枚まで）。
 
-## Liquid Glass (Apple-like) + List Infographic Style (16:9)
+## 重要：プロンプト作成の原則
 
-### Visual Theme (Liquid Glass)
-- Use translucent frosted-glass panels (layered cards) with soft blur, subtle refraction feel, and specular highlights.
-- Glass panels should feel "tinted" by accent colors, but keep high legibility and ample whitespace.
+### 1. コンテンツの本質を抽出する
+- 単なる箇条書きの羅列ではなく、セクションの**中心的なコンセプト**や**関係性**を視覚化する
+- 「何が重要か」「どう繋がっているか」「どんな構造か」を図で表現する
+- 読者が一目で理解できる**ビジュアルサマリー**を目指す
 
-### Recommended Color Palette (Apple System Colors as Liquid Glass tints)
-- Base / Background:
-  - Light neutral background: #F2F2F7 (soft gray-white)
-  - Primary text: #000000
-  - Separator / hairline: rgba(120,120,128,0.20)
-- Accent tints (use 1–2 per slide, do NOT rainbow everything):
-  - systemTeal:   #5AC8FA
-  - systemBlue:   #007AFF
-  - systemIndigo: #5856D6
-  - systemPurple: #AF52DE
-  - systemPink:   #FF2D55
-  - Optional for emphasis only:
-    - systemGreen:  #34C759
-    - systemOrange: #FF9500
-    - systemYellow: #FFCC00
-    - systemRed:    #FF3B30
-- If you use gradients, prefer "teal → blue → purple" as the main Liquid Glass gradient accent.
+### 2. 適切な図解タイプを選択する（セクション内容に応じて）
+- **フローチャート**: プロセス、手順、ワークフローの説明
+- **マインドマップ/放射状図**: 中心概念と関連要素の関係
+- **比較図/対比表**: 2つ以上の選択肢やアプローチの比較
+- **階層図/ピラミッド**: 重要度、レベル、カテゴリの構造
+- **サイクル図**: 循環するプロセスや相互作用
+- **タイムライン**: 時系列の流れ、ステップ
+- **ベン図**: 重複する概念や共通点
+- **アイコングリッド**: 複数の独立した要素の概要（最後の手段）
 
-### Layout Rule (List-style Infographic)
-- Each slide must be a LIST infographic:
-  - Vertical stack of 4–7 items (cards or rows).
-  - Each item: icon/bullet → short label → optional micro-sublabel (very short).
-  - Use consistent spacing, alignment, and repeating rhythm (grid).
-- Allow variants across images while staying list-based:
-  - numbered list, checklist, steps list, pros/cons list, timeline-as-list, glossary list.
+### 3. ペーパークラフト風デザインスタイル（必須）
+全てのプロンプトに以下のスタイル指示を含めること：
 
-### Typography (M PLUS 1)
-- Use "M PLUS 1" for all text (title, labels, captions).
-- Minimum font size: 24px (no small text).
-- Keep text minimal: short labels only (3–6 words max per label). Avoid paragraphs.
+**トーン**: 初心者ユーザー向け、優しい、手作り感、立体、ファンシー
 
-### Shape & Components
-- Rounded corners everywhere (cards, pills, chips): large radius (16–24px).
-- Use subtle shadows, soft inner highlights on glass cards, and consistent icon stroke weight.
+**カラーパレット**:
+- 背景色: #E0FFFF (Light Cyan / 水色)
+- 文字色: #5F9EA0 (Cadet Blue / 青緑)
+- アクセントカラー: #FFB6C1 (Light Pink / ピンク)、#FFFACD (Lemon Chiffon / レモン色)
 
-### Quality / Negative Constraints
-- No dense text blocks, no tiny legends, no screenshots, no watermarks/logos.
-- Prioritize clarity: strong contrast between text and glass surface.
+**ビジュアルスタイル**:
+- 色画用紙を切り抜いて重ねたような表現 (paper cutout collage style)
+- 紙の重なりによる影 (drop shadow on layered paper)
+- フリーハンドのようなわずかな歪み (slightly irregular hand-cut edges)
+- 画用紙のテクスチャ (construction paper texture)
+
+**タイポグラフィ**:
+- 丸みのある手書き風フォント (rounded handwritten font)
+- 紙から切り出したような文字 (letters cut out from paper)
+
+### 4. プロンプト構成（必須要素）
+各プロンプトには以下を含めること：
+1. **図解タイプ**の明示（例: "flowchart showing...", "mind map centered on..."）
+2. **中心概念**と**主要な要素**（3-7個）
+3. **要素間の関係性**（矢印、接続、グループ化など）
+4. **ペーパークラフト風スタイル指示**（上記スタイルを英語で記述）
+5. **言語指定**: ${settings.language === 'ja' ? '日本語テキスト' : 'English text'}
 
 必ず以下のJSON形式のみで出力してください。説明文は不要です。
 {
   "items": [
     {
       "id": "img1",
-      "title": "画像のタイトル",
-      "afterHeading": "挿入位置の見出し（ノート内の実際の見出しテキスト）",
-      "prompt": "画像生成プロンプト（${settings.imageStyle}スタイル、${settings.language}言語、上記Liquid Glassスタイル指示を含む詳細なプロンプト）",
-      "description": "画像の説明"
+      "title": "画像のタイトル（図解の内容を端的に）",
+      "afterHeading": "挿入位置の見出し（ノート内の実際の見出しテキスト、完全一致）",
+      "prompt": "図解タイプ + 中心概念 + 主要要素と関係性 + ペーパークラフト風スタイル指示 + 言語指定を含む詳細なプロンプト",
+      "description": "この図解が伝えるメッセージ（1文）"
     }
   ]
 }`;
 
-    const userPrompt = `以下のノート記事の内容を最初から最後まで熟読し、その内容を要約したうえで、見出しの数だけ画像生成プランを作成してください。
+    const userPrompt = `以下のノート記事を熟読し、各セクションの**核心的なメッセージ**を抽出してください。
+
+各セクションについて：
+1. そのセクションが伝えたい**最も重要なポイント**は何か？
+2. 概念間の**関係性・構造・流れ**はどうなっているか？
+3. それを**どの図解タイプ**で最も効果的に表現できるか？
+
+単なる箇条書きリストではなく、**概念の関係性を視覚化**する図解プロンプトを生成してください。
+必ず**ペーパークラフト風（色画用紙を切り抜いて重ねた）スタイル**で表現してください。
 
 ノート内容:
 ${compressedContent}`;

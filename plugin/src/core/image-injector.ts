@@ -88,6 +88,7 @@ export class ImageInjector {
 
   /**
    * 挿入位置を計算
+   * 画像はセクションの末尾（次の見出しの直前）に挿入される
    */
   private calculateInsertions(
     parsed: ParsedNote,
@@ -99,10 +100,10 @@ export class ImageInjector {
       const { afterHeading } = image.item;
       let lineNumber = -1;
 
-      // 見出しを検索
+      // 見出しを検索し、そのセクションの末尾（lineEnd）を取得
       for (const section of parsed.sections) {
         if (section.heading === afterHeading || section.heading.includes(afterHeading)) {
-          lineNumber = section.lineStart;
+          lineNumber = section.lineEnd;
           break;
         }
       }
