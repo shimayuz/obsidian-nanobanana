@@ -28,15 +28,27 @@ export class ImageInjector {
 
   /**
    * 画像をVaultに保存
+   * ファイル名形式: YYYYMMDD_サマリー.png
    */
-  async saveImage(noteFile: TFile, imageId: string, imageData: ArrayBuffer): Promise<string> {
+  async saveImage(
+    noteFile: TFile,
+    imageId: string,
+    imageData: ArrayBuffer,
+    title?: string
+  ): Promise<string> {
     // 保存先フォルダを確保
     const folder = normalizePath(this.settings.attachmentFolder);
     await this.ensureFolder(folder);
 
-    // ファイル名を生成
-    const noteName = sanitizeFilename(noteFile.basename);
-    const filename = `${noteName}__${imageId}.png`;
+    // 日付を取得（YYYYMMDD形式）
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+    
+    // サマリー部分を生成（タイトルがあれば使用、なければimageId）
+    const summaryPart = title ? sanitizeFilename(title) : imageId;
+    
+    // ファイル名: YYYYMMDD_サマリー.png
+    const filename = `${dateStr}_${summaryPart}.png`;
     const path = normalizePath(`${folder}/${filename}`);
 
     // 既存ファイルがあれば削除
@@ -122,17 +134,20 @@ export class ImageInjector {
 
   /**
    * 画像埋め込みブロックを生成
+   * 表示: ![[画像名]] → 画像 → キャプション（1行）
    */
   private createImageBlock(image: GeneratedImage): string {
     const timestamp = new Date().toISOString();
-    const { id, path, item, prompt } = image;
+    const { id, path, item } = image;
+    
+    // パスからファイル名のみを抽出
+    const filename = path.split('/').pop() || path;
 
     return [
       '',
-      AI_SUMMARY_MARKER.START(id, timestamp, prompt),
-      `![[${path}]]`,
-      `*${item.title}: ${item.description}*`,
-      AI_SUMMARY_MARKER.END(id),
+      `<!-- ai-summary id="${id}" generated="${timestamp}" -->`,
+      `![[${filename}]]`,
+      `*${item.description}*`,
       '',
     ].join('\n');
   }

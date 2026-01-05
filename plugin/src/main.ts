@@ -195,7 +195,7 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
             totalItems,
             message: `Saving image ${i + 1}/${totalItems}...`,
           });
-          const imagePath = await this.imageInjector.saveImage(file, item.id, imageData);
+          const imagePath = await this.imageInjector.saveImage(file, item.id, imageData, item.title);
           generatedImages.push({ id: item.id, path: imagePath, item, prompt: item.prompt });
         } catch (error) {
           console.error(`Failed to generate image ${item.id}:`, error);
