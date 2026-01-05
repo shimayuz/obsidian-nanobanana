@@ -11,6 +11,8 @@ import {
   TFile,
   Modal,
   Editor,
+  Menu,
+  MarkdownView,
 } from 'obsidian';
 
 import type { PluginSettings, GenerationProgress } from './types';
@@ -34,6 +36,7 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
     await this.loadSettings();
     this.initializeServices();
     this.registerCommands();
+    this.registerContextMenu();
     this.addSettingTab(new GeminiSettingTab(this.app, this));
 
     console.log('Gemini Summary Images Plugin loaded');
@@ -86,6 +89,30 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
       name: 'Regenerate Image at Cursor',
       editorCallback: (editor) => this.regenerateImageAtCursor(editor),
     });
+  }
+
+  /**
+   * 右クリックコンテキストメニューを登録
+   */
+  private registerContextMenu() {
+    this.registerEvent(
+      this.app.workspace.on('editor-menu', (menu: Menu, editor: Editor, view: MarkdownView) => {
+        const cursor = editor.getCursor();
+        const content = editor.getValue();
+        const blockInfo = this.findImageBlockAtCursor(content, cursor.line);
+
+        if (blockInfo && blockInfo.prompt) {
+          menu.addItem((item) => {
+            item
+              .setTitle('🔄 Regenerate This Image')
+              .setIcon('refresh-cw')
+              .onClick(() => {
+                this.regenerateImageAtCursor(editor);
+              });
+          });
+        }
+      })
+    );
   }
 
   /**
