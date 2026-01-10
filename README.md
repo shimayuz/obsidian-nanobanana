@@ -13,6 +13,14 @@ An Obsidian plugin that automatically generates AI-powered summary images for yo
 - 📊 Real-time progress display (including polling status)
 - 🗑️ Bulk delete AI images command
 
+## ⚠️ Security Notice
+
+**IMPORTANT**: The `plugin/data.json` file contains your API keys and is automatically excluded from Git via `.gitignore`. 
+
+- **Never commit `plugin/data.json` to version control**
+- If you fork or clone this repository, ensure `plugin/data.json` remains in `.gitignore`
+- Your API keys will be exposed if this file is accidentally committed
+
 ## Quick Start (Direct API Mode)
 
 Recommended setup for most users - no server required!

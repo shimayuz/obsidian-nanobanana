@@ -9,10 +9,12 @@ import {
   Setting,
   Notice,
   TFile,
+  TFolder,
   Modal,
   Editor,
   Menu,
   MarkdownView,
+  AbstractInputSuggest,
 } from 'obsidian';
 
 import type { PluginSettings, GenerationProgress } from './types';
@@ -89,6 +91,17 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
       name: 'Regenerate Image at Cursor',
       editorCallback: (editor) => this.regenerateImageAtCursor(editor),
     });
+
+    // Manual Mode: 選択テキストから画像生成
+    this.addCommand({
+      id: 'generate-image-from-selection',
+      name: 'Generate Image from Selection (Manual Mode)',
+      editorCallback: (editor, view) => {
+        if (view instanceof MarkdownView) {
+          this.generateImageFromSelection(editor, view);
+        }
+      },
+    });
   }
 
   /**
@@ -101,6 +114,7 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
         const content = editor.getValue();
         const blockInfo = this.findImageBlockAtCursor(content, cursor.line);
 
+        // 既存の画像ブロック上での再生成オプション
         if (blockInfo && blockInfo.prompt) {
           menu.addItem((item) => {
             item
@@ -108,6 +122,19 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
               .setIcon('refresh-cw')
               .onClick(() => {
                 this.regenerateImageAtCursor(editor);
+              });
+          });
+        }
+
+        // Manual Mode: テキスト選択時に画像生成オプションを表示
+        const selection = editor.getSelection();
+        if (selection && selection.trim().length > 0 && this.settings.manualMode.enabled) {
+          menu.addItem((item) => {
+            item
+              .setTitle('🖼️ Generate Image from Selection')
+              .setIcon('image-plus')
+              .onClick(() => {
+                this.generateImageFromSelection(editor, view);
               });
           });
         }
@@ -332,6 +359,137 @@ export default class GeminiSummaryImagesPlugin extends Plugin {
       console.error('Regeneration failed:', error);
       new Notice(`Failed to regenerate: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  }
+
+  /**
+   * Manual Mode: 選択テキストから画像を生成
+   */
+  async generateImageFromSelection(editor: Editor, view: MarkdownView) {
+    const file = this.app.workspace.getActiveFile();
+    if (!file || file.extension !== 'md') {
+      new Notice('Please open a markdown note first');
+      return;
+    }
+
+    const selection = editor.getSelection();
+    if (!selection || selection.trim().length === 0) {
+      new Notice('Please select some text first');
+      return;
+    }
+
+    // API設定チェック
+    if (this.settings.connectionMode === 'direct') {
+      if (!this.settings.openaiApiKey || !this.settings.kieApiKey) {
+        new Notice('Please configure your API keys in settings');
+        return;
+      }
+    } else {
+      if (!this.settings.proxyToken) {
+        new Notice('Please configure your proxy token in settings');
+        return;
+      }
+    }
+
+    // 選択テキストの長さチェック
+    let textToProcess = selection;
+    if (selection.length > 5000) {
+      textToProcess = selection.substring(0, 5000);
+      new Notice('Selection truncated to 5000 characters');
+    }
+
+    // 選択終了位置を取得
+    const selectionEnd = editor.getCursor('to');
+
+    // ローディング通知を表示
+    const loadingNotice = new Notice('Generating image from selection...', 0);
+
+    try {
+      // 1. 選択テキストからプロンプト・タイトル・説明を生成
+      loadingNotice.setMessage('Creating image prompt...');
+      const result = await this.apiClient.generatePromptFromSelection(
+        textToProcess,
+        this.settings
+      );
+
+      console.log('Manual Mode: Generated result:', result);
+
+      // 2. 使用する設定を決定（Full-autoと同じか個別設定か）
+      const imageSettings = this.getManualModeSettings();
+
+      // 3. 画像生成
+      loadingNotice.setMessage('Generating image...');
+      const imageData = await this.apiClient.generateImage(
+        result.prompt,
+        imageSettings,
+        (progress: { status: string; message: string; progress?: number }) => {
+          loadingNotice.setMessage(`Generating: ${progress.message}`);
+        }
+      );
+
+      // 4. 画像を保存（タイトルをファイル名に使用）
+      loadingNotice.setMessage('Saving image...');
+      const imageId = `manual-${Date.now()}`;
+      const imagePath = await this.imageInjector.saveImage(
+        file,
+        imageId,
+        imageData,
+        result.title
+      );
+
+      // 5. 選択の直下に画像ブロックを挿入
+      loadingNotice.setMessage('Inserting image...');
+      const imageBlock = this.createManualModeImageBlock(imageId, imagePath, result.prompt, result.description);
+
+      // カーソルを選択終了位置に移動し、次の行に挿入
+      editor.setCursor(selectionEnd);
+      const currentLine = editor.getLine(selectionEnd.line);
+      const insertPosition = {
+        line: selectionEnd.line,
+        ch: currentLine.length
+      };
+
+      editor.replaceRange('\n' + imageBlock, insertPosition);
+
+      loadingNotice.hide();
+      new Notice('Image generated and inserted successfully!');
+
+    } catch (error) {
+      loadingNotice.hide();
+      console.error('Manual Mode generation failed:', error);
+      new Notice(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Manual Mode用の設定を取得
+   */
+  private getManualModeSettings(): PluginSettings {
+    if (this.settings.manualMode.useFullAutoSettings) {
+      return this.settings;
+    }
+
+    // Manual Mode固有の設定を適用
+    return {
+      ...this.settings,
+      imageStyle: this.settings.manualMode.imageStyle,
+      aspectRatio: this.settings.manualMode.aspectRatio,
+      resolution: this.settings.manualMode.resolution,
+    };
+  }
+
+  /**
+   * Manual Mode用の画像ブロックを作成
+   * プロンプトは保存しない（シンプルなフォーマット）
+   */
+  private createManualModeImageBlock(id: string, path: string, _prompt: string, description: string): string {
+    const filename = path.split('/').pop() || path;
+
+    return [
+      '',
+      `![[${filename}]]`,
+      `*${description}*`,
+      '',
+    ].join('\n');
   }
 
   /**
@@ -656,16 +814,18 @@ class GeminiSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Attachment Folder')
-      .setDesc('Folder to save generated images (relative to vault root)')
-      .addText((text) =>
+      .setDesc('Folder to save generated images (type to search folders)')
+      .addText((text) => {
         text
           .setPlaceholder('attachments/ai-summary')
           .setValue(this.plugin.settings.attachmentFolder)
           .onChange(async (value) => {
             this.plugin.settings.attachmentFolder = value;
             await this.plugin.saveSettings();
-          })
-      );
+          });
+        // フォルダ候補を表示
+        new FolderSuggest(this.app, text.inputEl);
+      });
 
     // 送信設定
     containerEl.createEl('h3', { text: 'Content Processing' });
@@ -729,6 +889,91 @@ class GeminiSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    // Manual Mode設定
+    containerEl.createEl('h3', { text: 'Manual Mode' });
+
+    containerEl.createEl('p', {
+      text: 'Generate images from selected text via right-click context menu.',
+      cls: 'setting-item-description',
+    });
+
+    new Setting(containerEl)
+      .setName('Enable Manual Mode')
+      .setDesc('Show "Generate Image from Selection" in right-click menu')
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.manualMode.enabled)
+          .onChange(async (value) => {
+            this.plugin.settings.manualMode.enabled = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName('Use Full-Auto Settings')
+      .setDesc('Use the same image style, aspect ratio, and resolution as Full-Auto mode')
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.manualMode.useFullAutoSettings)
+          .onChange(async (value) => {
+            this.plugin.settings.manualMode.useFullAutoSettings = value;
+            await this.plugin.saveSettings();
+            this.display(); // 再描画してManual固有設定を表示/非表示
+          })
+      );
+
+    // Manual Mode固有設定（Full-Auto設定を使用しない場合のみ表示）
+    if (!this.plugin.settings.manualMode.useFullAutoSettings) {
+      const manualSettingsContainer = containerEl.createDiv({ cls: 'manual-mode-settings' });
+
+      new Setting(manualSettingsContainer)
+        .setName('Manual Mode - Image Style')
+        .setDesc('Visual style for manually generated images')
+        .addDropdown((dropdown) =>
+          dropdown
+            .addOption('infographic', 'Infographic')
+            .addOption('diagram', 'Diagram')
+            .addOption('card', 'Summary Card')
+            .addOption('whiteboard', 'Whiteboard')
+            .addOption('slide', 'Slide')
+            .setValue(this.plugin.settings.manualMode.imageStyle)
+            .onChange(async (value) => {
+              this.plugin.settings.manualMode.imageStyle = value as any;
+              await this.plugin.saveSettings();
+            })
+        );
+
+      new Setting(manualSettingsContainer)
+        .setName('Manual Mode - Aspect Ratio')
+        .setDesc('Aspect ratio for manually generated images')
+        .addDropdown((dropdown) =>
+          dropdown
+            .addOption('16:9', '16:9 (Widescreen)')
+            .addOption('4:3', '4:3 (Standard)')
+            .addOption('1:1', '1:1 (Square)')
+            .setValue(this.plugin.settings.manualMode.aspectRatio)
+            .onChange(async (value) => {
+              this.plugin.settings.manualMode.aspectRatio = value as any;
+              await this.plugin.saveSettings();
+            })
+        );
+
+      new Setting(manualSettingsContainer)
+        .setName('Manual Mode - Resolution')
+        .setDesc('Image resolution for manually generated images')
+        .addDropdown((dropdown) =>
+          dropdown
+            .addOption('1K', '1K')
+            .addOption('2K', '2K')
+            .addOption('4K', '4K ⚠️ High Price')
+            .setValue(this.plugin.settings.manualMode.resolution)
+            .onChange(async (value) => {
+              this.plugin.settings.manualMode.resolution = value as any;
+              await this.plugin.saveSettings();
+            })
+        );
+    }
   }
 }
 
@@ -765,5 +1010,52 @@ class BackupViewModal extends Modal {
 
   onClose() {
     this.contentEl.empty();
+  }
+}
+
+/**
+ * フォルダ候補を表示するサジェスター
+ */
+class FolderSuggest extends AbstractInputSuggest<TFolder> {
+  private inputEl: HTMLInputElement;
+
+  constructor(app: App, inputEl: HTMLInputElement) {
+    super(app, inputEl);
+    this.inputEl = inputEl;
+  }
+
+  getSuggestions(inputStr: string): TFolder[] {
+    const abstractFiles = this.app.vault.getAllLoadedFiles();
+    const folders: TFolder[] = [];
+    const lowerCaseInputStr = inputStr.toLowerCase();
+
+    abstractFiles.forEach((folder) => {
+      if (
+        folder instanceof TFolder &&
+        folder.path.toLowerCase().contains(lowerCaseInputStr)
+      ) {
+        folders.push(folder);
+      }
+    });
+
+    // ルートフォルダも追加（空文字の場合）
+    if (lowerCaseInputStr === '' || '/'.contains(lowerCaseInputStr)) {
+      const rootFolder = this.app.vault.getRoot();
+      if (!folders.includes(rootFolder)) {
+        folders.unshift(rootFolder);
+      }
+    }
+
+    return folders.slice(0, 20); // 最大20件
+  }
+
+  renderSuggestion(folder: TFolder, el: HTMLElement): void {
+    el.createEl('div', { text: folder.path || '/' });
+  }
+
+  selectSuggestion(folder: TFolder): void {
+    this.inputEl.value = folder.path;
+    this.inputEl.trigger('input');
+    this.close();
   }
 }

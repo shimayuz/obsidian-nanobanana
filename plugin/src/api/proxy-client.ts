@@ -17,6 +17,7 @@ import type {
   ErrorResponse,
 } from '../../../shared/api-types';
 import type { PluginSettings, ParsedNote } from '../types';
+import type { ManualModePromptResult } from './api-client';
 
 /** ポーリング設定 */
 const POLLING_INTERVAL_MS = 5000;  // 5秒間隔
@@ -170,6 +171,21 @@ export class ProxyClient {
       default:
         return `Status: ${status}`;
     }
+  }
+
+  /**
+   * 選択テキストから画像生成プロンプトを作成（Manual Mode用）
+   * プロキシサーバー経由でプロンプトを生成
+   */
+  async generatePromptFromSelection(
+    selectedText: string,
+    settings: PluginSettings
+  ): Promise<ManualModePromptResult> {
+    const response = await this.post<ManualModePromptResult>('/v1/prompt/from-selection', {
+      text: selectedText,
+      language: settings.language,
+    });
+    return response;
   }
 
   /**

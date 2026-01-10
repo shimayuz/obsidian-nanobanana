@@ -35,6 +35,15 @@ export interface PluginSettings {
   // 安全設定
   createBackup: boolean;
   backupLocation: BackupLocation;
+
+  // Manual Mode設定
+  manualMode: {
+    enabled: boolean;
+    imageStyle: ImageStyle;
+    aspectRatio: AspectRatio;
+    resolution: Resolution;
+    useFullAutoSettings: boolean;
+  };
 }
 
 export type SendMode = 'full' | 'headings' | 'summary';
@@ -66,6 +75,15 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 
   createBackup: true,
   backupLocation: 'plugin',
+
+  // Manual Mode defaults
+  manualMode: {
+    enabled: true,
+    imageStyle: 'infographic',
+    aspectRatio: '16:9',
+    resolution: '1K',
+    useFullAutoSettings: true,
+  },
 };
 
 /** 解析済みノート */

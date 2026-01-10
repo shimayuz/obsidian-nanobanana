@@ -6,10 +6,18 @@ import type { PluginSettings } from '../types';
 import { DirectApiClient } from './direct-api-client';
 import { ProxyClient } from './proxy-client';
 
+/** Manual Mode用のプロンプト生成結果 */
+export interface ManualModePromptResult {
+  prompt: string;
+  title: string;
+  description: string;
+}
+
 /** APIクライアントの抽象インターフェース */
 export interface ApiClient {
   generatePlan(parsed: any, settings: PluginSettings): Promise<any>;
   generateImage(prompt: string, settings: PluginSettings, onProgress?: any): Promise<ArrayBuffer>;
+  generatePromptFromSelection(selectedText: string, settings: PluginSettings): Promise<ManualModePromptResult>;
 }
 
 /**

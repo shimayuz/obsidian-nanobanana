@@ -15,6 +15,9 @@ lerna-debug.log*
 .env
 .env.*
 !.env.example
+
+# Plugin data (contains API keys)
+plugin/data.json
 server/.dev.vars
 server/.wrangler/
 
