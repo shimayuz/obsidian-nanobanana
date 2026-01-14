@@ -109,23 +109,8 @@ export class ImageInjector {
     const result: Array<{ lineNumber: number; image: GeneratedImage }> = [];
 
     for (const image of images) {
-      const { afterHeading } = image.item;
-      let lineNumber = -1;
-
-      // 見出しを検索し、そのセクションの末尾（lineEnd）を取得
-      for (const section of parsed.sections) {
-        if (section.heading === afterHeading || section.heading.includes(afterHeading)) {
-          lineNumber = section.lineEnd;
-          break;
-        }
-      }
-
-      // 見つからない場合は末尾
-      if (lineNumber === -1) {
-        const lastSection = parsed.sections[parsed.sections.length - 1];
-        lineNumber = lastSection ? lastSection.lineEnd : 0;
-      }
-
+      const targetHeading = this.normalizeHeading(image.item.afterHeading);
+      const lineNumber = this.findSectionEndLine(parsed, targetHeading);
       result.push({ lineNumber, image });
     }
 
@@ -167,5 +152,61 @@ export class ImageInjector {
    */
   setLastReadHash(content: string): void {
     this.lastReadHash = computeHash(content);
+  }
+
+  /**
+   * 見出しテキストを正規化
+   * - 先頭の#や数字付きナンバリングを除去
+   * - 前後スペースと大小文字を吸収
+   */
+  private normalizeHeading(rawHeading: string): string {
+    return rawHeading
+      .replace(/^#+\s*/, '')
+      .replace(/^\d+[\.\-、）]\s*/, '')
+      .trim()
+      .toLowerCase();
+  }
+
+  /**
+   * 対象見出しのセクション末尾行を取得（次の見出し直前）
+   * - 完全一致を最優先
+   * - 次点で先頭一致（例: "2. 準備" と "準備"）
+   * - 見つからなければ最後のセクション末尾
+   */
+  private findSectionEndLine(parsed: ParsedNote, normalizedTarget: string): number {
+    const sections = parsed.sections;
+    if (!sections.length) return 0;
+
+    // frontmatterを除去した本文ラインに合わせる（NoteParserと同じ基準）
+    const bodyContent = parsed.rawContent.replace(/^---\n[\s\S]*?\n---\n/, '');
+    const lines = bodyContent.split('\n');
+
+    const matchIndex = sections.findIndex(
+      (section) =>
+        this.normalizeHeading(section.heading) === normalizedTarget ||
+        this.normalizeHeading(section.heading).startsWith(normalizedTarget)
+    );
+
+    if (matchIndex !== -1) {
+      const matchSection = sections[matchIndex];
+      const nextSection = sections[matchIndex + 1];
+
+      // 次の見出しがある場合、その直前までを探索範囲にする
+      const searchStart = Math.min(lines.length - 1, Math.max(0, matchSection.lineStart + 1));
+      const searchEnd = nextSection ? Math.max(0, nextSection.lineStart - 1) : lines.length - 1;
+
+      // 範囲内に区切り線（---）があれば、その直前に挿入
+      for (let i = searchStart; i <= searchEnd; i++) {
+        if (lines[i]?.trim() === '---') {
+          return Math.max(matchSection.lineStart, i - 1);
+        }
+      }
+
+      // 区切り線がなければ従来どおりセクション末尾
+      return matchSection.lineEnd;
+    }
+
+    const lastSection = sections[sections.length - 1];
+    return lastSection ? lastSection.lineEnd : 0;
   }
 }
