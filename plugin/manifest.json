@@ -1,7 +1,7 @@
 {
   "id": "docs-summary-to-image",
   "name": "Docs Summary to Image",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "minAppVersion": "1.4.0",
   "description": "Generate AI-powered summary images for your notes. Automatically creates infographics, diagrams, and visual summaries.",
   "author": "",
